@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Chosen Palette: Warm Neutral with Professional Blue -->
+<!-- Application Structure Plan: The designed structure is a single-page application (SPA) dashboard with a main navigation bar ("Overview," "Core Skills," "Experience," "Leadership," "Education"). This replaces the linear, top-to-bottom scroll of a static resume. The "Overview" page features interactive buttons ("Resource Management," "Financial Analysis," "Data Governance") that dynamically pull and display proof points from all other sections of the resume. This structure was chosen because it allows a user (e.g., a recruiter) to immediately explore the candidate's strengths relevant to a specific role (like the Aera job) rather than hunting for keywords. It answers "Why is this candidate a fit?" in an interactive, non-linear way, reinforcing strengths by connecting them directly to evidence. -->
+<!-- Visualization & Content Choices:
+- Report Info: Professional Summary -> Goal: 30-second pitch -> Viz/Method: HTML Text + Interactive Buttons (HTML/JS) -> Interaction: 'onClick' dynamically updates a "Proof Points" div with aggregated data -> Justification: Breaks the linear resume format, allowing users to query strengths and see immediate, consolidated evidence.
+- Report Info: Skills List -> Goal: Visualize profile "shape" -> Viz/Method: Chart.js Radar Chart (Canvas) -> Interaction: Visual representation of balanced strengths -> Justification: More engaging and memorable than a static list; provides a quick "at a glance" understanding of the candidate's core competencies.
+- Report Info: Education CGPA (8.09) -> Goal: Visualize academic performance -> Viz/Method: Chart.js Donut Chart (Canvas) -> Interaction: Visual (8.09 out of 10) -> Justification: Turns a simple number into a clean, modern visual metric.
+- Report Info: Leadership Experience (IEEE SSR: 40+ volunteers, 30 branches) -> Goal: Quantify the scale of management -> Viz/Method: Chart.js Bar Chart (Canvas) -> Interaction: Visual comparison of resource numbers -> Justification: A bar chart gives immediate visual weight to the numbers "40" and "30", making the scale of responsibility clearer than text alone.
+- Report Info: Experience/Leadership Roles -> Goal: Organize detailed content -> Viz/Method: HTML/CSS/JS Tabs -> Interaction: 'onClick' to switch content panes -> Justification: Standard, clean UI for segmenting detailed information without creating a long, cluttered page.
+- Report Info: Key Metrics (e.g., ">95% delivery", "20% accuracy") -> Goal: Highlight key achievements -> Viz/Method: HTML/CSS "Stat Cards" (Styled Divs) -> Interaction: Static visual callouts -> Justification: Makes critical metrics "pop" for scanners.
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Profile | Vineet Patil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'sans-serif';
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .bar-chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        .donut-chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 300px;
+        }
+        .nav-btn {
+            @apply px-4 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-200 transition-colors;
+        }
+        .nav-btn.active {
+            @apply bg-blue-600 text-white hover:bg-blue-700;
+        }
+        .strength-btn {
+            @apply px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer;
+        }
+        .strength-btn.active {
+            @apply bg-blue-600 text-white border-blue-600;
+        }
+        .stat-card {
+            @apply bg-white p-4 rounded-lg shadow-lg text-center;
+        }
+        .stat-card .stat-value {
+            @apply text-3xl font-bold text-blue-600;
+        }
+        .stat-card .stat-label {
+            @apply text-sm text-gray-500 mt-1;
+        }
+        .tab-btn {
+            @apply px-4 py-3 w-full text-left font-medium text-gray-600 rounded-lg hover:bg-gray-100;
+        }
+        .tab-btn.active {
+            @apply bg-blue-600 text-white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto max-w-6xl px-6 py-4 flex flex-col sm:flex-row justify-between sm:items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">VINEET PATIL</h1>
+                <p class="text-lg text-blue-600 font-medium">Project Coordinator & Resource Analyst</p>
+            </div>
+            <div class="text-sm text-gray-600 mt-3 sm:mt-0 sm:text-right">
+                <p>vineet.patil2809@gmail.com</p>
+                <p>+91-7249797614</p>
+                <a href="https://www.linkedin.com/in/vineet-patil-b09397210/">linkedin</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow-lg sticky top-[92px] sm:top-[85px] z-40">
+        <div class="container mx-auto max-w-6xl px-6">
+            <div class="flex flex-wrap justify-center sm:space-x-4">
+                <button class="nav-btn active" data-page="overview">Overview</button>
+                <button class="nav-btn" data-page="skills">Core Skills</button>
+                <button class="nav-btn" data-page="experience">Experience</button>
+                <button class="nav-btn" data-page="leadership">Leadership</button>
+                <button class="nav-btn" data-page="education">Education</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto max-w-6xl p-6 min-h-screen">
+        
+        <div id="page-overview" class="page-content">
+            <section id="summary" class="bg-white shadow-xl rounded-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Professional Summary</h2>
+                <p class="text-lg text-gray-700 leading-relaxed">
+                    A detail-oriented professional possessing experience in project coordination, resource allocation, and financial tracking. Demonstrated expertise in managing cross-functional projects, standardizing reporting protocols, and enforcing operational governance. Proficient in leveraging CRM systems (Salesforce) and data analysis tools (Excel, Tableau) for KPI tracking, project scheduling, and ensuring data accuracy. Seeking to apply comprehensive skills in resource management and project oversight to support a global professional services team.
+                </p>
+
+                <hr class="my-8 border-gray-200">
+
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Interactive Strengths Explorer</h3>
+                <p class="text-gray-600 mb-6">Click a strength below to see aggregated proof points from across my entire career and leadership experience.</p>
+                
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button class="strength-btn active" data-strength="resource">Resource Management</button>
+                    <button class="strength-btn" data-strength="financial">Financial Analysis</button>
+                    <button class="strength-btn" data-strength="governance">Data Governance & Process</button>
+                </div>
+
+                <div id="proof-points-container" class="bg-gray-50 border border-gray-200 rounded-lg p-6 min-h-[150px]">
+                    <h4 id="proof-title" class="text-xl font-semibold text-blue-700 mb-3">Resource Management</h4>
+                    <ul id="proof-list" class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>Directed and allocated a resource pool of over 40 volunteers across 30 student branches (IEEE).</li>
+                        <li>Oversaw all resource allocation and scheduling for 2 national and 10+ district-level events (IEEE).</li>
+                        <li>Managed 1,100+ students and 50+ young professionals during a national-level congress (IEEE).</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div id="page-skills" class="page-content hidden">
+            <section id="skills-viz" class="bg-white shadow-xl rounded-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Core Skills Visualization</h2>
+                <p class="text-lg text-gray-600 mb-8 text-center">This chart illustrates the balance of my key competencies, showing a strong foundation in management, analysis, and execution.</p>
+                <div class="chart-container">
+                    <canvas id="skillsRadarChart"></canvas>
+                </div>
+
+                <hr class="my-8 border-gray-200">
+
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Detailed Skillset</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-blue-700 mb-3">Resource & Project Mgmt</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-700">
+                            <li>Resource Allocation & Scheduling</li>
+                            <li>Project Coordination & Oversight</li>
+                            <li>Project Portfolio Management (PMO)</li>
+                            <li>Stakeholder Communication</li>
+                            <li>Process Documentation</li>
+                            <li>Risk Tracking & Mitigation</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-blue-700 mb-3">Financial & Data Analysis</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-700">
+                            <li>Financial Project Tracking</li>
+                            <li>Billing & Invoicing</li>
+                            <li>Budgeting & Forecasting</li>
+                            <li>KPI Monitoring & Reporting</li>
+                            <li>Data Validation & Governance</li>
+                            <li>Profitability Analysis</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h4 class="text-xl font-semibold text-blue-700 mb-3">Technical Skills</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-700">
+                            <li>Salesforce CRM</li>
+                            <li>Microsoft Excel (Advanced)</li>
+                            <li>Tableau</li>
+                            <li>MIS Reporting</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="page-experience" class="page-content hidden">
+            <section id="experience" class="bg-white shadow-xl rounded-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Professional Experience</h2>
+                <p class="text-lg text-gray-600 mb-6">Here you can explore my corporate roles. I've highlighted key metrics that demonstrate my impact on project delivery, financial tracking, and data integrity.</p>
+                
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3">
+                        <div class="flex md:flex-col gap-2">
+                            <button class="tab-btn exp-tab-btn active" data-tab="tsl">
+                                <span class="font-bold">TSL Consulting</span><br>
+                                <span class="text-sm">Apr 2025 - Present</span>
+                            </button>
+                            <button class="tab-btn exp-tab-btn" data-tab="salesforce">
+                                <span class="font-bold">Salesforce</span><br>
+                                <span class="text-sm">Oct 2022 - Dec 2022</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-2/3">
+                        <div id="tab-tsl" class="tab-content exp-tab-content bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4">TSL Consulting – IT Consulting</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                                <div class="stat-card">
+                                    <div class="stat-value">70%+</div>
+                                    <div class="stat-label">Billing Process Mgmt</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">&gt;95%</div>
+                                    <div class="stat-label">On-Time Delivery</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">100%</div>
+                                    <div class="stat-label">Reporting Visibility</div>
+                                </div>
+                            </div>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Manages over 70% of monthly billing processes, ensuring 100% timely closures and precise financial tracking.</li>
+                                <li>Ensures CRM data integrity (Salesforce), facilitating 100% reporting visibility for project health and budgetary oversight.</li>
+                                <li>Collaborates with global teams on risk tracking and issue resolution, maintaining a project delivery rate exceeding 95%.</li>
+                                <li>Facilitates program reporting and forecasting to align project delivery with revenue objectives.</li>
+                            </ul>
+                        </div>
+                        
+                        <div id="tab-salesforce" class="tab-content exp-tab-content hidden bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Salesforce – Developer Internship</h3>
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="stat-card">
+                                    <div class="stat-value">20%</div>
+                                    <div class="stat-label">Data Accuracy Boost</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">100%</div>
+                                    <div class="stat-label">Standardized Docs</div>
+                                </div>
+                            </div>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Improved data accuracy by 20% through rigorous process validation and the creation of standardized documentation.</li>
+                                <li>Engineered automation for downstream data processing, enhancing reporting efficiency and minimizing manual errors.</li>
+                                <li>Partnered with cross-functional teams to resolve technical discrepancies and improve data reporting accuracy.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="page-leadership" class="page-content hidden">
+            <section id="leadership" class="bg-white shadow-xl rounded-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Leadership & Coordination</h2>
+                <p class="text-lg text-gray-600 mb-6">Beyond my professional roles, I've managed significant projects, resources, and budgets in leadership positions. This section details the scale of that experience.</p>
+                
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3">
+                        <div class="flex md:flex-col gap-2">
+                            <button class="tab-btn lead-tab-btn active" data-tab="ieee-ssr">
+                                <span class="font-bold">IEEE (Co-SSR)</span><br>
+                                <span class="text-sm">Feb 2023 - Jan 2024</span>
+                            </button>
+                            <button class="tab-btn lead-tab-btn" data-tab="ieee-em">
+                                <span class="font-bold">IEEE (Event Manager)</span><br>
+                                <span class="text-sm">Feb 2022 - Jan 2023</span>
+                            </button>
+                            <button class="tab-btn lead-tab-btn" data-tab="rotaract">
+                                <span class="font-bold">Rotaract (PRO)</span><br>
+                                <span class="text-sm">Jul 2022 - Jun 2023</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-2/3">
+                        <div id="tab-ieee-ssr" class="tab-content lead-tab-content bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4">IEEE Pune Section – Co-Section Student Rep</h3>
+                            <p class="text-gray-700 mb-4">As Co-SSR, my role was equivalent to a program manager, focusing on resource management, financial tracking, and process governance across 30 regional branches.</p>
+                            <div class="bar-chart-container mb-6">
+                                <canvas id="leadershipBarChart"></canvas>
+                            </div>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li><b>Resource Management:</b> Directed and allocated a resource pool of over 40 volunteers across 30 student branches.</li>
+                                <li><b>Financial Tracking:</b> Instituted standardized frameworks for reporting and budget tracking, enhancing forecast accuracy by 20%.</li>
+                                <li><b>Process Documentation:</b> Deployed unified reporting systems and governance processes to ensure timely deliverables.</li>
+                            </ul>
+                        </div>
+                        
+                        <div id="tab-ieee-em" class="tab-content lead-tab-content hidden bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4">IEEE Pune Section – Event Manager</h3>
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="stat-card">
+                                    <div class="stat-value">1,100+</div>
+                                    <div class="stat-label">Attendees Managed</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">12+</div>
+                                    <div class="stat-label">Events Directed</div>
+                                </div>
+                            </div>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Oversaw national-level event execution (AISYWLC 2022), managing all project logistics for 1,100+ students and 50+ young professionals.</li>
+                                <li>Directed and managed 2 national and 10+ district-level technical events, overseeing all resource allocation and scheduling.</li>
+                            </ul>
+                        </div>
+
+                        <div id="tab-rotaract" class="tab-content lead-tab-content hidden bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4">Rotaract Club – Public Relationship Officer</h3>
+                             <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="stat-card">
+                                    <div class="stat-value">100%</div>
+                                    <div class="stat-label">Budget Compliance</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">6+</div>
+                                    <div class="stat-label">Cross-Club Initiatives</div>
+                                </div>
+                            </div>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Coordinated vendor and partner relations for multi-event campaigns, ensuring 100% budgetary compliance.</li>
+                                <li>Spearheaded over 6 cross-club initiatives, handling all project communications and stakeholder engagement.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="page-education" class="page-content hidden">
+            <section id="education" class="bg-white shadow-xl rounded-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Education</h2>
+                <p class="text-lg text-gray-600 mb-6">My formal education provided a strong technical foundation in engineering, which I augmented with a specialization in Data Science.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-2xl font-semibold text-blue-700">PES Modern College of Engineering</h3>
+                        <p class="text-lg text-gray-800 mt-2">Savitribai Phule Pune University</p>
+                        <hr class="my-4">
+                        <p class="text-gray-700">
+                            <span class="font-medium">Degree:</span> Bachelor of Engineering, Electronics & Telecommunication
+                        </p>
+                        <p class="text-gray-700">
+                            <span class="font-medium">Honors:</span> Data Science
+                        </p>
+                        <p class="text-gray-700">
+                            <span class="font-medium">Graduation:</span> 2024
+                        </p>
+                    </div>
+
+                     <div class="text-center">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Final CGPA: 8.09 / 10</h3>
+                        <div class="donut-chart-container">
+                            <canvas id="educationDoughnutChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div> 
+                         <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-2xl font-semibold text-blue-700">Shri Jayantrao Wanjari Junior College School, Wadoda, Nagpur, Maharashtra</h3>
+                        <p class="text-lg text-gray-800 mt-2">HSC</p>
+                        <hr class="my-4">
+                        <p class="text-gray-700">
+                            <span class="font-medium">Education:</span> Genaral Science
+                        </p>
+                        <p class="text-gray-700">
+                            <span class="font-medium">Year:</span> 2020
+                        </p>
+                        
+                    </div>
+                     <div class="text-center">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Score: 63 / 100</h3>
+                        <div class="donut-chart-container">
+                            <canvas id="educationDoughnutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <footer class="text-center p-6 text-gray-500 text-sm mt-12">
+        Interactive Resume for Vineet Patil | Built with HTML, Tailwind CSS, and Chart.js
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const pages = document.querySelectorAll('.page-content');
+            
+            const strengthButtons = document.querySelectorAll('.strength-btn');
+            const proofTitle = document.getElementById('proof-title');
+            const proofList = document.getElementById('proof-list');
+            
+            const expTabButtons = document.querySelectorAll('.exp-tab-btn');
+            const expTabContents = document.querySelectorAll('.exp-tab-content');
+            
+            const leadTabButtons = document.querySelectorAll('.lead-tab-btn');
+            const leadTabContents = document.querySelectorAll('.lead-tab-content');
+
+            let chartsDrawn = {
+                skills: false,
+                leadership: false,
+                education: false
+            };
+
+            const proofData = {
+                resource: {
+                    title: 'Resource Management',
+                    points: [
+                        'Directed and allocated a resource pool of over 40 volunteers across 30 student branches (IEEE).',
+                        'Oversaw all resource allocation and scheduling for 2 national and 10+ district-level events (IEEE).',
+                        'Managed 1,100+ students and 50+ young professionals during a national-level congress (IEEE).',
+                        'Proficient in project scheduling and resource assignment based on SOW requirements.'
+                    ]
+                },
+                financial: {
+                    title: 'Financial Analysis & Tracking',
+                    points: [
+                        'Manages over 70% of monthly billing processes, ensuring 100% timely closures (TSL).',
+                        'Instituted standardized frameworks for reporting and budget tracking, enhancing forecast accuracy by 20% (IEEE).',
+                        'Coordinated vendor relations, ensuring 100% budgetary compliance (Rotaract).',
+                        'Facilitates program reporting and forecasting to align project delivery with revenue objectives (TSL).',
+                        'Skilled in Financial Project Tracking, Billing, Invoicing, and Profitability Analysis.'
+                    ]
+                },
+                governance: {
+                    title: 'Data Governance & Process',
+                    points: [
+                        'Ensures CRM data integrity (Salesforce), facilitating 100% reporting visibility (TSL).',
+                        'Improved data accuracy by 20% through rigorous process validation and standardized documentation (Salesforce).',
+                        'Deployed unified reporting systems and governance processes to ensure timely deliverables (IEEE).',
+                        'Engineered automation for downstream data processing, enhancing reporting efficiency (Salesforce).',
+                        'Expertise in Data Validation, Process Documentation, and MIS Reporting.'
+                    ]
+                }
+            };
+
+            function updateProofPoints(strength) {
+                const data = proofData[strength];
+                proofTitle.textContent = data.title;
+                proofList.innerHTML = data.points.map(point => `<li>${point}</li>`).join('');
+                
+                strengthButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.strength === strength) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+
+            strengthButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    updateProofPoints(e.currentTarget.dataset.strength);
+                });
+            });
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const targetPage = e.currentTarget.dataset.page;
+
+                    pages.forEach(page => {
+                        page.classList.add('hidden');
+                        if (page.id === `page-${targetPage}`) {
+                            page.classList.remove('hidden');
+                        }
+                    });
+
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+
+                    if (targetPage === 'skills' && !chartsDrawn.skills) {
+                        createSkillsRadarChart();
+                        chartsDrawn.skills = true;
+                    }
+                    if (targetPage === 'leadership' && !chartsDrawn.leadership) {
+                        createLeadershipBarChart();
+                        chartsDrawn.leadership = true;
+                    }
+                    if (targetPage === 'education' && !chartsDrawn.education) {
+                        createEducationDoughnutChart();
+                        chartsDrawn.education = true;
+                    }
+                });
+            });
+
+            function createTabGroup(tabButtons, tabContents) {
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const targetTab = e.currentTarget.dataset.tab;
+                        
+                        tabContents.forEach(content => {
+                            content.classList.add('hidden');
+                            if (content.id === `tab-${targetTab}`) {
+                                content.classList.remove('hidden');
+                            }
+                        });
+
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        e.currentTarget.classList.add('active');
+                    });
+                });
+            }
+
+            createTabGroup(expTabButtons, expTabContents);
+            createTabGroup(leadTabButtons, leadTabContents);
+
+            function createSkillsRadarChart() {
+                const ctx = document.getElementById('skillsRadarChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: [
+                            'Project & Resource Mgmt', 
+                            'Financial Analysis', 
+                            'Data Governance', 
+                            'Stakeholder Comm.', 
+                            'Technical Tools (CRM/BI)', 
+                            'Process Optimization'
+                        ],
+                        datasets: [{
+                            label: 'Skill Level',
+                            data: [9, 9, 8, 8, 9, 7],
+                            backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                            borderColor: 'rgba(37, 99, 235, 1)',
+                            pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(37, 99, 235, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 10,
+                                pointLabels: {
+                                    font: { size: 13 }
+                                },
+                                ticks: {
+                                    stepSize: 2
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            function createLeadershipBarChart() {
+                const ctx = document.getElementById('leadershipBarChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Volunteers Directed', 'Branches Coordinated'],
+                        datasets: [{
+                            label: 'Scale of Management (IEEE SSR)',
+                            data: [40, 30],
+                            backgroundColor: [
+                                'rgba(37, 99, 235, 0.6)',
+                                'rgba(5, 150, 105, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(37, 99, 235, 1)',
+                                'rgba(5, 150, 105, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.x !== null) {
+                                            label += context.parsed.x;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function createEducationDoughnutChart() {
+                const ctx = document.getElementById('educationDoughnutChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['CGPA', 'Remaining'],
+                        datasets: [{
+                            data: [8.09, 10 - 8.09],
+                            backgroundColor: [
+                                'rgba(37, 99, 235, 1)',
+                                'rgba(229, 231, 235, 1)'
+                            ],
+                            borderColor: [
+                                'rgba(37, 99, 235, 1)',
+                                'rgba(229, 231, 235, 1)'
+                            ],
+                            borderWidth: 1,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateProofPoints('resource');
+        });
+    </script>
+</body>
+</html>
